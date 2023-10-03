@@ -34,6 +34,10 @@ export default class UpvoteConcept {
     return await this.upvotes.readMany(query);
   }
 
+  async getUpvoteByPost(post: ObjectId) {
+    return this.getUpvotes({ post });
+  }
+
   async countUpvotes(post: ObjectId) {
     const upvotes = await this.getUpvotes(post);
     if (!upvotes) {

@@ -90,8 +90,8 @@ const operations: operation[] = [
     fields: { _id: "input" },
   },
   {
-    name: "Get Upvote Count",
-    endpoint: "/api/upvotes/",
+    name: "Get Upvotes",
+    endpoint: "/api/upvotes/:post",
     method: "GET",
     fields: { post: "input" },
   },
