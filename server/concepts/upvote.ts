@@ -1,6 +1,6 @@
 import { Filter, ObjectId } from "mongodb";
 import DocCollection, { BaseDoc } from "../framework/doc";
-import { NotFoundError } from "./errors";
+import { NotAllowedError, NotFoundError } from "./errors";
 
 export interface UpvoteDoc extends BaseDoc {
   upvoter: ObjectId;
@@ -15,10 +15,13 @@ export default class UpvoteConcept {
     return { msg: "you've upvoted post!", upvote: await this.upvotes.readOne({ _id }) };
   }
 
-  async hasUpvote(upvoter: ObjectId, post: ObjectId) {
-    const upvoted = await this.upvotes.readOne({ upvoter, post });
-    if (!upvoted) {
-      throw new HasNotUpvoted(upvoter, post);
+  async isUpvoter(upvoter: ObjectId, _id: ObjectId) {
+    const upvote = await this.upvotes.readOne({ _id });
+    if (!upvote) {
+      throw new UpvoteNoFound(_id);
+    }
+    if (upvote.upvoter.toString() !== upvoter.toString()) {
+      throw new UpvoteOwnerNotMatching(upvoter, _id);
     }
   }
 
@@ -33,24 +36,23 @@ export default class UpvoteConcept {
 
   async countUpvotes(post: ObjectId) {
     const upvotes = await this.getUpvotes(post);
-    if (upvotes == null) {
-      throw new PostNotFound(post);
+    if (!upvotes) {
+      return 0;
     }
     return upvotes.length;
   }
 }
-
-export class PostNotFound extends NotFoundError {
-  constructor(public readonly post: ObjectId) {
-    super("Cannot upvote non-existing post {0}", post);
+export class UpvoteNoFound extends NotFoundError {
+  constructor(public readonly _id: ObjectId) {
+    super("Upvote {0} does not exist", _id);
   }
 }
 
-export class HasNotUpvoted extends NotFoundError {
+export class UpvoteOwnerNotMatching extends NotAllowedError {
   constructor(
     public readonly upvoter: ObjectId,
-    public readonly post: ObjectId,
+    public readonly _id: ObjectId,
   ) {
-    super("user {0} has no upvote on post {1}", post);
+    super("{0} is not the upvoter of upvote {1}!", upvoter, _id);
   }
 }

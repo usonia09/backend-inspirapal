@@ -2,7 +2,7 @@ import { ObjectId } from "mongodb";
 
 import { Router, getExpressRouter } from "./framework/router";
 
-import { Friend, Post, User, WebSession } from "./app";
+import { Friend, Post, Upvote, User, WebSession } from "./app";
 import { PostDoc, PostOptions } from "./concepts/post";
 import { UserDoc } from "./concepts/user";
 import { WebSessionDoc } from "./concepts/websession";
@@ -88,6 +88,31 @@ class Routes {
     const user = WebSession.getUser(session);
     await Post.isAuthor(user, _id);
     return Post.delete(_id);
+  }
+
+  @Router.post("/upvotes/:post") //post: input
+  async createUpvote(session: WebSessionDoc, post: ObjectId) {
+    const user = WebSession.getUser(session);
+    const upvote = await Upvote.upvote(user, post);
+    return { msg: upvote.msg, upvote: await Responses.upvote(upvote.upvote) };
+  }
+
+  @Router.delete("/upvotes/:_id")
+  async deleteUpvote(session: WebSessionDoc, _id: ObjectId) {
+    const user = WebSession.getUser(session);
+    await Upvote.isUpvoter(user, _id);
+    return Upvote.removeUpvote(_id);
+  }
+
+  @Router.get("/upvotes") //post: input
+  async getUpvotes(post: ObjectId) {
+    const upvotes = await Upvote.getUpvotes(post);
+    return Responses.upvotes(upvotes);
+  }
+
+  @Router.get("/upvotes") //post: input
+  async getUpvoteCount(post: ObjectId) {
+    return await Upvote.countUpvotes(post);
   }
 
   @Router.get("/friends")

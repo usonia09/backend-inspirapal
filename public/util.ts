@@ -85,9 +85,9 @@ const operations: operation[] = [
   },
   {
     name: "Delete Upvote",
-    endpoint: "/api/upvotes",
+    endpoint: "/api/upvotes/:_id",
     method: "DELETE",
-    fields: { id: "input" },
+    fields: { _id: "input" },
   },
   {
     name: "Get Upvote Count",
