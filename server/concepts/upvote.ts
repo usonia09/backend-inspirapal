@@ -25,6 +25,13 @@ export default class UpvoteConcept {
     }
   }
 
+  async hasNotUpvoted(upvoter: ObjectId, post: ObjectId) {
+    const upvote = await this.upvotes.readOne({ upvoter, post });
+    if (upvote) {
+      throw new AlreadyUpvoted(upvoter, post);
+    }
+  }
+
   async removeUpvote(_id: ObjectId) {
     await this.upvotes.deleteOne({ _id });
     return { msg: "Upvote removed!" };
@@ -58,5 +65,14 @@ export class UpvoteOwnerNotMatching extends NotAllowedError {
     public readonly _id: ObjectId,
   ) {
     super("{0} is not the upvoter of upvote {1}!", upvoter, _id);
+  }
+}
+
+export class AlreadyUpvoted extends NotAllowedError {
+  constructor(
+    public readonly upvoter: ObjectId,
+    public readonly post: ObjectId,
+  ) {
+    super(" user {0} is already upvoted post {1}!", upvoter, post);
   }
 }

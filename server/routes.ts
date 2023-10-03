@@ -93,6 +93,7 @@ class Routes {
   @Router.post("/upvotes/:post") //post: input
   async createUpvote(session: WebSessionDoc, post: ObjectId) {
     const user = WebSession.getUser(session);
+    await Upvote.hasNotUpvoted(user, post);
     const upvote = await Upvote.upvote(user, post);
     return { msg: upvote.msg, upvote: await Responses.upvote(upvote.upvote) };
   }
