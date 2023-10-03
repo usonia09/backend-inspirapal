@@ -77,6 +77,24 @@ const operations: operation[] = [
     method: "DELETE",
     fields: { id: "input" },
   },
+  {
+    name: "Upvote Post",
+    endpoint: "/api/upvotes/:post",
+    method: "POST",
+    fields: { post: "input" },
+  },
+  {
+    name: "Delete Upvote",
+    endpoint: "/api/upvotes",
+    method: "DELETE",
+    fields: { id: "input" },
+  },
+  {
+    name: "Get Upvote Count",
+    endpoint: "/api/upvotes/",
+    method: "GET",
+    fields: { post: "input" },
+  },
 ];
 
 // Do not edit below here.
