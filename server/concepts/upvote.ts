@@ -39,7 +39,7 @@ export default class UpvoteConcept {
   }
 
   async countUpvotes(post: ObjectId) {
-    const upvotes = await this.getUpvotes(post);
+    const upvotes = await this.getUpvoteByPost(post);
     if (!upvotes) {
       return 0;
     }

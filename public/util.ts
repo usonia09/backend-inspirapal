@@ -95,6 +95,13 @@ const operations: operation[] = [
     method: "GET",
     fields: { post: "input" },
   },
+
+  // {
+  //   name: "Get Upvote Count",
+  //   endpoint: "/api/upvotes/:post",
+  //   method: "GET",
+  //   fields: { post: "input" },
+  // },
 ];
 
 // Do not edit below here.

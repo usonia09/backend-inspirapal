@@ -104,10 +104,10 @@ class Routes {
     return Upvote.removeUpvote(_id);
   }
 
-  @Router.get("/upvotes/:post") //post: input
+  @Router.get("/upvotes/:post")
   async getUpvotes(post: ObjectId) {
     const upvotes = await Upvote.getUpvoteByPost(post);
-    return Responses.upvotes(upvotes);
+    return { msg: `Post ${post} has ${await Upvote.countUpvotes(post)} upvotes:`, upvotes: await Responses.upvotes(upvotes) };
   }
 
   @Router.get("/friends")
