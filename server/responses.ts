@@ -1,4 +1,5 @@
 import { User } from "./app";
+import { CommentDoc } from "./concepts/comment";
 import { AlreadyFriendsError, FriendNotFoundError, FriendRequestAlreadyExistsError, FriendRequestDoc, FriendRequestNotFoundError } from "./concepts/friend";
 import { PostAuthorNotMatchError, PostDoc } from "./concepts/post";
 import { UpvoteDoc } from "./concepts/upvote";
@@ -9,6 +10,25 @@ import { Router } from "./framework/router";
  * For example, it converts a {@link PostDoc} into a more readable format for the frontend.
  */
 export default class Responses {
+  /**
+   * Convert CommentDoc into more readable format for frontend by converting author into username.
+   */
+  static async comment(comment: CommentDoc | null) {
+    if (!comment) {
+      return comment;
+    }
+    const author = await User.getUserById(comment.author);
+    return { ...comment, author: author.username };
+  }
+
+  /**
+   * Same as {@link Comment} but for an array of CommentDoc for improved performance.
+   */
+  static async comments(comments: CommentDoc[]) {
+    const authors = await User.idsToUsernames(comments.map((comment) => comment.author));
+    return comments.map((comment, i) => ({ ...comment, author: authors[i] }));
+  }
+
   /**
    * Convert UpvoteDoc into more readable format for frontend by converting upvoter into username.
    */

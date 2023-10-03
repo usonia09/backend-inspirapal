@@ -1,3 +1,4 @@
+import CommentConcept from "./concepts/comment";
 import FriendConcept from "./concepts/friend";
 import PostConcept from "./concepts/post";
 import UpvoteConcept from "./concepts/upvote";
@@ -10,3 +11,4 @@ export const User = new UserConcept();
 export const Post = new PostConcept();
 export const Friend = new FriendConcept();
 export const Upvote = new UpvoteConcept();
+export const Comment = new CommentConcept();

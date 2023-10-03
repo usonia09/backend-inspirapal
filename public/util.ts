@@ -95,13 +95,30 @@ const operations: operation[] = [
     method: "GET",
     fields: { post: "input" },
   },
-
-  // {
-  //   name: "Get Upvote Count",
-  //   endpoint: "/api/upvotes/:post",
-  //   method: "GET",
-  //   fields: { post: "input" },
-  // },
+  {
+    name: "Add commment",
+    endpoint: "/api/comments/:post",
+    method: "POST",
+    fields: { post: "input", content: "input" },
+  },
+  {
+    name: "Delete commment",
+    endpoint: "/api/comments/:id",
+    method: "DELETE",
+    fields: { id: "input" },
+  },
+  {
+    name: "Update commment",
+    endpoint: "/api/comments/:id",
+    method: "PATCH",
+    fields: { id: "input", update: { content: "input" } },
+  },
+  {
+    name: "Get commments",
+    endpoint: "/api/comments/:post",
+    method: "GET",
+    fields: { post: "input" },
+  },
 ];
 
 // Do not edit below here.

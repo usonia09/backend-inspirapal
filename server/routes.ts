@@ -2,7 +2,8 @@ import { ObjectId } from "mongodb";
 
 import { Router, getExpressRouter } from "./framework/router";
 
-import { Friend, Post, Upvote, User, WebSession } from "./app";
+import { Comment, Friend, Post, Upvote, User, WebSession } from "./app";
+import { CommentDoc } from "./concepts/comment";
 import { PostDoc, PostOptions } from "./concepts/post";
 import { UserDoc } from "./concepts/user";
 import { WebSessionDoc } from "./concepts/websession";
@@ -115,6 +116,33 @@ class Routes {
   async getFriends(session: WebSessionDoc) {
     const user = WebSession.getUser(session);
     return await User.idsToUsernames(await Friend.getFriends(user));
+  }
+
+  @Router.post("/comments/:post")
+  async addComment(session: WebSessionDoc, post: ObjectId, content: string) {
+    const user = WebSession.getUser(session);
+    const created = await Comment.create(user, post, content);
+    return { msg: created.msg, post: await Responses.comment(created.comment) };
+  }
+
+  @Router.delete("/comments/:id")
+  async deleteComment(session: WebSessionDoc, _id: ObjectId) {
+    const user = WebSession.getUser(session);
+    await Comment.isAuthor(user, _id);
+    return Comment.delete(_id);
+  }
+
+  @Router.patch("/comments/:id")
+  async updateComment(session: WebSessionDoc, _id: ObjectId, update: Partial<CommentDoc>) {
+    const user = WebSession.getUser(session);
+    await Comment.isAuthor(user, _id);
+    return await Responses.comment((await Comment.update(_id, update)).update_version);
+  }
+
+  @Router.get("/comments/:post")
+  async getComments(post: ObjectId) {
+    const comments = await Comment.getCommentByPost(post);
+    return await Responses.comments(comments);
   }
 
   @Router.delete("/friends/:friend")
