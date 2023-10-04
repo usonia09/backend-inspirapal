@@ -125,14 +125,14 @@ class Routes {
     return { msg: created.msg, post: await Responses.comment(created.comment) };
   }
 
-  @Router.delete("/comments/:id")
+  @Router.delete("/comments/:_id")
   async deleteComment(session: WebSessionDoc, _id: ObjectId) {
     const user = WebSession.getUser(session);
     await Comment.isAuthor(user, _id);
     return Comment.delete(_id);
   }
 
-  @Router.patch("/comments/:id")
+  @Router.patch("/comments/:_id")
   async updateComment(session: WebSessionDoc, _id: ObjectId, update: Partial<CommentDoc>) {
     const user = WebSession.getUser(session);
     await Comment.isAuthor(user, _id);

@@ -33,7 +33,7 @@ export default class CommentConcept {
   }
 
   async delete(_id: ObjectId) {
-    await this.comments.deleteOne(_id);
+    await this.comments.deleteOne({ _id });
     return { msg: `Comment ${_id} deleted` };
   }
 
