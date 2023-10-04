@@ -185,6 +185,65 @@ class Routes {
     const fromId = (await User.getUserByUsername(from))._id;
     return await Friend.rejectRequest(fromId, user);
   }
+
+  //Restful Route Outline (Comment to avoid compilation Error as function bodies are empty)
+
+  /**
+   * Category
+   */
+
+  /**
+
+  @Router.post("/categories") // creating a category adds a new field in the database thus the use of `Post`
+  async createCategory(name: string, posts: Post[]) {}
+
+  @Router.get("/categories") // with GET we access all available categories in the database
+  async getContent(name: string) {} // We can then get the content of a specific category given its name
+
+  @Router.patch("/categories/:_id") // since adding Item adds it to an existing category, we use `PATCH`
+  async addItem(_id: ObjectId, update: Partial<CategoryDoc>) {} // so we need `_id` to know which category to update.
+   
+  */
+
+  /**
+   *  L^3 (Live Learning Lab)
+   */
+
+  /**
+  
+  @Router.post("/L^3") // creating L3 adds a data to database thus `Post`
+  async startL3(session: WebSessionDoc, title: string, attendants: string[]) {} // session is need to make sure that L3 is started by the host.
+
+  @Router.get("/L^3/:_id") // getting participant is accessing data in the database without changing it thus `GET`
+  async getParticipants(_id: ObjectId) {} //`_id` is used to filter out the L^3 of interest
+
+  @Router.patch("/L^3/:_id") // updating an L^3 involve altering the state of an existing L^3 thus `PATCH`. `any`= L^3DOC
+  async updateL3(session: WebSessionDoc, update: Partial<any>) {}
+
+  @Router.delete("/L^3/:_id") // the specific route is choose allow specificity in term of which L^3 to delete
+  async removeL3(session: WebSessionDoc, _id: ObjectId) {}
+  
+  */
+
+  /**
+   *  ScheduleEvent
+   */
+
+  /**
+  
+  @Router.post("/scheduleevents") // `Post` is once again used here since we are adding new data (Event) to database
+  async createEvent(session: WebSessionDoc, title: string, host: string, time: Date) {}
+
+  @Router.patch("/scheduleevents/:_id") //`PATCH` is needed with the `_id` to filter out which data to update in the database
+  async updateEvent(session: WebSessionDoc, _id: ObjectId, update: Partial<ScheduleEventDoct>) {}
+
+  @Router.get("/scheduleevents")
+  async getEvents(host?: string) {}
+
+  @Router.delete("/scheduleevents/:_id")
+  async cancelEvent(session: WebSessionDoc, _id: ObjectId) {}
+  
+  */
 }
 
 export default getExpressRouter(new Routes());
