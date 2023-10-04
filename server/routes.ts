@@ -91,7 +91,7 @@ class Routes {
     return Post.delete(_id);
   }
 
-  @Router.post("/upvotes/:post") //post: input
+  @Router.post("/posts/:post/upvotes")
   async createUpvote(session: WebSessionDoc, post: ObjectId) {
     const user = WebSession.getUser(session);
     await Upvote.hasNotUpvoted(user, post);
@@ -106,7 +106,7 @@ class Routes {
     return Upvote.removeUpvote(_id);
   }
 
-  @Router.get("/upvotes/:post")
+  @Router.get("/posts/:post/upvotes")
   async getUpvotes(post: ObjectId) {
     const upvotes = await Upvote.getUpvoteByPost(post);
     return { msg: `Post ${post} has ${await Upvote.countUpvotes(post)} upvotes:`, upvotes: await Responses.upvotes(upvotes) };
@@ -118,7 +118,7 @@ class Routes {
     return await User.idsToUsernames(await Friend.getFriends(user));
   }
 
-  @Router.post("/comments/:post")
+  @Router.post("/posts/:post/comments")
   async addComment(session: WebSessionDoc, post: ObjectId, content: string) {
     const user = WebSession.getUser(session);
     const created = await Comment.create(user, post, content);
@@ -139,7 +139,7 @@ class Routes {
     return await Responses.comment((await Comment.update(_id, update)).update_version);
   }
 
-  @Router.get("/comments/:post")
+  @Router.get("/posts/:post/comments")
   async getComments(post: ObjectId) {
     const comments = await Comment.getCommentByPost(post);
     return await Responses.comments(comments);

@@ -79,7 +79,7 @@ const operations: operation[] = [
   },
   {
     name: "Upvote Post",
-    endpoint: "/api/upvotes/:post",
+    endpoint: "/api/posts/:post/upvotes",
     method: "POST",
     fields: { post: "input" },
   },
@@ -91,13 +91,13 @@ const operations: operation[] = [
   },
   {
     name: "Get Upvotes",
-    endpoint: "/api/upvotes/:post",
+    endpoint: "/api/posts/:post/upvotes",
     method: "GET",
     fields: { post: "input" },
   },
   {
     name: "Add commment",
-    endpoint: "/api/comments/:post",
+    endpoint: "/api/posts/:post/comments",
     method: "POST",
     fields: { post: "input", content: "input" },
   },
@@ -115,7 +115,7 @@ const operations: operation[] = [
   },
   {
     name: "Get commments",
-    endpoint: "/api/comments/:post",
+    endpoint: "/api/posts/:post/comments",
     method: "GET",
     fields: { post: "input" },
   },
