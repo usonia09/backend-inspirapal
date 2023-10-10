@@ -2,7 +2,7 @@ import { ObjectId } from "mongodb";
 
 import { Router, getExpressRouter } from "./framework/router";
 
-import { Comment, Friend, Post, Upvote, User, WebSession } from "./app";
+import { Category, Comment, Friend, Post, Upvote, User, WebSession } from "./app";
 import { CommentDoc } from "./concepts/comment";
 import { PostDoc, PostOptions } from "./concepts/post";
 import { UserDoc } from "./concepts/user";
@@ -71,9 +71,11 @@ class Routes {
   }
 
   @Router.post("/posts")
-  async createPost(session: WebSessionDoc, content: string, options?: PostOptions) {
+  async createPost(session: WebSessionDoc, content: string, label: string, options?: PostOptions) {
     const user = WebSession.getUser(session);
-    const created = await Post.create(user, content, options);
+    await Category.categoryExist(label);
+    const created = await Post.create(user, content, label, options);
+    await Category.addItem((await Category.getCategoryByName(label))._id, created.id);
     return { msg: created.msg, post: await Responses.post(created.post) };
   }
 
@@ -88,6 +90,8 @@ class Routes {
   async deletePost(session: WebSessionDoc, _id: ObjectId) {
     const user = WebSession.getUser(session);
     await Post.isAuthor(user, _id);
+    const label = await Post.getPostLabel(_id);
+    await Category.deleteItem((await Category.getCategoryByName(label))._id, _id);
     return Post.delete(_id);
   }
 
@@ -186,24 +190,16 @@ class Routes {
     return await Friend.rejectRequest(fromId, user);
   }
 
-  //Restful Route Outline (Comment to avoid compilation Error as function bodies are empty)
+  @Router.post("/categories") // creating a category adds a new field in the database thus the use of `post`
+  async createCategory(name: string) {
+    return await Category.create(name);
+  }
 
-  /**
-   * Category
-   */
-
-  /**
-
-  @Router.post("/categories") // creating a category adds a new field in the database thus the use of `Post`
-  async createCategory(name: string, posts: Post[]) {}
-
-  @Router.get("/categories") // with GET we access all available categories in the database
-  async getContent(name: string) {} // We can then get the content of a specific category given its name
-
-  @Router.patch("/categories/:_id") // since adding Item adds it to an existing category, we use `PATCH`
-  async addItem(_id: ObjectId, update: Partial<CategoryDoc>) {} // so we need `_id` to know which category to update.
-   
-  */
+  @Router.get("/categories/:name") // with GET we access all available categories in the database
+  async getContent(name: string) {
+    // We can then get the content of a specific category given its name
+    return await Category.getCategoryByName(name);
+  }
 
   /**
    *  L^3 (Live Learning Lab)

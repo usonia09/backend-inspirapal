@@ -63,13 +63,13 @@ const operations: operation[] = [
     name: "Create Post",
     endpoint: "/api/posts",
     method: "POST",
-    fields: { content: "input" },
+    fields: { content: "input", label: "input" },
   },
   {
     name: "Update Post",
     endpoint: "/api/posts/:id",
     method: "PATCH",
-    fields: { id: "input", update: { content: "input", options: { backgroundColor: "input" } } },
+    fields: { id: "input", update: { content: "input", label: "input", options: { backgroundColor: "input" } } },
   },
   {
     name: "Delete Post",
@@ -118,6 +118,20 @@ const operations: operation[] = [
     endpoint: "/api/posts/:post/comments",
     method: "GET",
     fields: { post: "input" },
+  },
+
+  {
+    name: "Create category",
+    endpoint: "/api/categories",
+    method: "POST",
+    fields: { name: "input" },
+  },
+
+  {
+    name: "Get Category Content",
+    endpoint: "/api/categories/:name",
+    method: "GET",
+    fields: { name: "input" },
   },
 ];
 
