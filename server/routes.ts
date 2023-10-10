@@ -2,9 +2,10 @@ import { ObjectId } from "mongodb";
 
 import { Router, getExpressRouter } from "./framework/router";
 
-import { Category, Comment, Friend, Post, Upvote, User, WebSession } from "./app";
+import { Category, Comment, Friend, Post, ScheduleEvent, Upvote, User, WebSession } from "./app";
 import { CommentDoc } from "./concepts/comment";
 import { PostDoc, PostOptions } from "./concepts/post";
+import { ScheduleEventDoc } from "./concepts/scheduleEvent";
 import { UserDoc } from "./concepts/user";
 import { WebSessionDoc } from "./concepts/websession";
 import Responses from "./responses";
@@ -201,6 +202,52 @@ class Routes {
     return await Category.getCategoryByName(name);
   }
 
+  @Router.post("/events") // `Post` is once again used here since we are adding new data (Event) to database
+  async scheduleEvent(session: WebSessionDoc, title: string, time: string) {
+    const user = WebSession.getUser(session);
+    const date = new Date(time);
+    return ScheduleEvent.schedule(title, user, date);
+  }
+
+  @Router.patch("/events/:_id") //`PATCH` is needed with the `_id` to filter out which data to update in the database
+  async updateEvent(session: WebSessionDoc, _id: ObjectId, update: Partial<ScheduleEventDoc>) {
+    const user = WebSession.getUser(session);
+    await ScheduleEvent.canEdit(user, _id);
+    if (update.time) {
+      update.time = new Date(update.time);
+    }
+    return ScheduleEvent.editEvent(_id, update);
+  }
+
+  @Router.get("/events")
+  async getEvents(host?: string, time?: string) {
+    let events: ScheduleEventDoc[];
+    if (time && host) {
+      const date = new Date(time);
+      const id = (await User.getUserByUsername(host))._id;
+      events = (await ScheduleEvent.getEventByHost(id)).filter((event) => {
+        return event.time.toString() === date.toString();
+      });
+    } else if (time) {
+      const date = new Date(time);
+      events = await ScheduleEvent.getEventAtTime(date);
+    } else if (host) {
+      const id = (await User.getUserByUsername(host))._id;
+      events = await ScheduleEvent.getEventByHost(id);
+    } else {
+      events = await ScheduleEvent.getEvents({});
+    }
+
+    return Responses.events(events);
+  }
+
+  @Router.delete("/events/:_id")
+  async cancelEvent(session: WebSessionDoc, _id: ObjectId) {
+    const user = WebSession.getUser(session);
+    await ScheduleEvent.canEdit(user, _id);
+    return ScheduleEvent.cancel(_id);
+  }
+
   /**
    *  L^3 (Live Learning Lab)
    */
@@ -218,26 +265,6 @@ class Routes {
 
   @Router.delete("/L^3/:_id") // the specific route is choose allow specificity in term of which L^3 to delete
   async removeL3(session: WebSessionDoc, _id: ObjectId) {}
-  
-  */
-
-  /**
-   *  ScheduleEvent
-   */
-
-  /**
-  
-  @Router.post("/scheduleevents") // `Post` is once again used here since we are adding new data (Event) to database
-  async createEvent(session: WebSessionDoc, title: string, host: string, time: Date) {}
-
-  @Router.patch("/scheduleevents/:_id") //`PATCH` is needed with the `_id` to filter out which data to update in the database
-  async updateEvent(session: WebSessionDoc, _id: ObjectId, update: Partial<ScheduleEventDoct>) {}
-
-  @Router.get("/scheduleevents")
-  async getEvents(host?: string) {}
-
-  @Router.delete("/scheduleevents/:_id")
-  async cancelEvent(session: WebSessionDoc, _id: ObjectId) {}
   
   */
 }

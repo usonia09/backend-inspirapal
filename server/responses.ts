@@ -2,6 +2,7 @@ import { User } from "./app";
 import { CommentDoc } from "./concepts/comment";
 import { AlreadyFriendsError, FriendNotFoundError, FriendRequestAlreadyExistsError, FriendRequestDoc, FriendRequestNotFoundError } from "./concepts/friend";
 import { PostAuthorNotMatchError, PostDoc } from "./concepts/post";
+import { ScheduleEventDoc } from "./concepts/scheduleEvent";
 import { UpvoteDoc } from "./concepts/upvote";
 import { Router } from "./framework/router";
 
@@ -10,6 +11,25 @@ import { Router } from "./framework/router";
  * For example, it converts a {@link PostDoc} into a more readable format for the frontend.
  */
 export default class Responses {
+  /**
+   * Convert CommentDoc into more readable format for frontend by converting author into username.
+   */
+  static async event(event: ScheduleEventDoc | null) {
+    if (!event) {
+      return event;
+    }
+    const host = await User.getUserById(event.host);
+    return { ...event, host: host.username };
+  }
+
+  /**
+   * Same as {@link event} but for an array of ScheduleEventDoc for improved performance.
+   */
+  static async events(events: ScheduleEventDoc[]) {
+    const hosts = await User.idsToUsernames(events.map((event) => event.host));
+    return events.map((event, i) => ({ ...event, host: hosts[i] }));
+  }
+
   /**
    * Convert CommentDoc into more readable format for frontend by converting author into username.
    */
