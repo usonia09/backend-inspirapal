@@ -64,7 +64,7 @@ export default class CategoryConcept {
       throw new NotFoundError(`Category ${_id} does not exist.`);
     }
     const posts = category.posts.filter((elt) => {
-      return elt != post;
+      return elt.toString() !== post.toString();
     });
     await this.updateCategory(_id, { posts });
     return { msg: "Item successfully deleted!" };
