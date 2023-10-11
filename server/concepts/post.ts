@@ -98,6 +98,6 @@ export class PostAuthorNotMatchError extends NotAllowedError {
     public readonly author: ObjectId,
     public readonly _id: ObjectId,
   ) {
-    super("{0} is not the author of post {1}!", author, _id);
+    super("{0} is not the author of post/message {1}!", author, _id);
   }
 }

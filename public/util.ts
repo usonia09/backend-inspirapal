@@ -163,52 +163,52 @@ const operations: operation[] = [
   },
 
   {
-    name: "Start Connect",
-    endpoint: "/api/connects",
+    name: "Start ConnectSpace",
+    endpoint: "/api/connectspaces",
     method: "POST",
     fields: { topic: "input" },
   },
 
   {
-    name: "Join Connect",
-    endpoint: "/api/connects/join/:id",
+    name: "Join ConnectSpace",
+    endpoint: "/api/connectspaces/join/:id",
     method: "PATCH",
-    fields: { id: "input" },
+    fields: { connectSpace_id: "input" },
   },
 
   {
-    name: "Leave Connect",
-    endpoint: "/api/connects/leave/:id",
+    name: "Leave ConnectSpace",
+    endpoint: "/api/connectspaces/leave/:id",
     method: "PATCH",
-    fields: { id: "input" },
+    fields: { connectSpace_id: "input" },
   },
 
   {
-    name: "End Connect",
-    endpoint: "/api/connects/end/:id",
+    name: "End ConnectSpace",
+    endpoint: "/api/connectspaces/end/:id",
     method: "DELETE",
-    fields: { id: "input" },
+    fields: { connectSpace_id: "input" },
   },
 
   {
-    name: "Get Connect Participants",
-    endpoint: "/api/connects/:id",
+    name: "Get ConnectSpace Participants",
+    endpoint: "/api/connectspaces/:id",
     method: "GET",
-    fields: { id: "input" },
+    fields: { connectSpace_id: "input" },
   },
 
   {
-    name: "Add Message to Connect",
-    endpoint: "/api/connects/:connect/add-message",
+    name: "Add Message to ConnectSpace",
+    endpoint: "/api/connectspaces/:connectspace/add-message",
     method: "PATCH",
-    fields: { connect: "input", message: "input" },
+    fields: { connectSpace_id: "input", message: "input" },
   },
 
   {
-    name: "Delete Message in Connect",
-    endpoint: "/api/connects/:connect/delete-message",
+    name: "Delete Message in ConnectSpace",
+    endpoint: "/api/connectspaces/:connectspace/delete-message",
     method: "PATCH",
-    fields: { connect: "input", message_id: "input" },
+    fields: { connectSpace_id: "input", message_id: "input" },
   },
 ];
 

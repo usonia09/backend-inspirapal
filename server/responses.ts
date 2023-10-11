@@ -1,6 +1,6 @@
 import { Post, User } from "./app";
 import { CommentDoc } from "./concepts/comment";
-import { ConnectDoc } from "./concepts/connect";
+import { ConnectSpaceDoc } from "./concepts/connectSpace";
 import { AlreadyFriendsError, FriendNotFoundError, FriendRequestAlreadyExistsError, FriendRequestDoc, FriendRequestNotFoundError } from "./concepts/friend";
 import { PostAuthorNotMatchError, PostDoc } from "./concepts/post";
 import { ScheduleEventDoc } from "./concepts/scheduleEvent";
@@ -13,17 +13,17 @@ import { Router } from "./framework/router";
  */
 export default class Responses {
   /**
-   * Convert ConnectDoc into more readable format for frontend by converting organizer and
+   * Convert ConnectSpaceDoc into more readable format for frontend by converting organizer and
    * participants into usernames and making messages more readable.
    */
-  static async connect(connect: ConnectDoc | null) {
-    if (!connect) {
-      return connect;
+  static async connectSpace(connectSpace: ConnectSpaceDoc | null) {
+    if (!connectSpace) {
+      return connectSpace;
     }
-    const organizer = await User.getUserById(connect.organizer);
-    const participants = await User.idsToUsernames(connect.participants);
-    const messages = await this.posts(await Post.getPostsByIds(connect.messages));
-    return { ...connect, organizer: organizer.username, participants: participants, messages: messages };
+    const organizer = await User.getUserById(connectSpace.organizer);
+    const participants = await User.idsToUsernames(connectSpace.participants);
+    const messages = await this.posts(await Post.getPostsByIds(connectSpace.messages));
+    return { ...connectSpace, organizer: organizer.username, participants: participants, messages: messages };
   }
 
   /**

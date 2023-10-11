@@ -1,7 +1,7 @@
 import CategoryConcept from "./concepts/category";
 import CommentConcept from "./concepts/comment";
+import ConnectSpaceConcept from "./concepts/connectSpace";
 import FriendConcept from "./concepts/friend";
-import ConnectConcept from "./concepts/connect";
 import PostConcept from "./concepts/post";
 import ScheduleEventConcept from "./concepts/scheduleEvent";
 import UpvoteConcept from "./concepts/upvote";
@@ -16,5 +16,5 @@ export const Friend = new FriendConcept();
 export const Upvote = new UpvoteConcept();
 export const Comment = new CommentConcept();
 export const Category = new CategoryConcept();
-export const Connect = new ConnectConcept();
+export const ConnectSpace = new ConnectSpaceConcept();
 export const ScheduleEvent = new ScheduleEventConcept();

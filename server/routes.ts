@@ -2,7 +2,7 @@ import { ObjectId } from "mongodb";
 
 import { Router, getExpressRouter } from "./framework/router";
 
-import { Category, Comment, Connect, Friend, Post, ScheduleEvent, Upvote, User, WebSession } from "./app";
+import { Category, Comment, ConnectSpace, Friend, Post, ScheduleEvent, Upvote, User, WebSession } from "./app";
 import { CommentDoc } from "./concepts/comment";
 import { PostDoc, PostOptions } from "./concepts/post";
 import { ScheduleEventDoc } from "./concepts/scheduleEvent";
@@ -250,52 +250,52 @@ class Routes {
     return ScheduleEvent.cancel(_id);
   }
 
-  @Router.post("/connects")
+  @Router.post("/connectspaces")
   async startEvent(session: WebSessionDoc, topic: string) {
     const user = WebSession.getUser(session);
     await ScheduleEvent.schedule(topic, user, new Date());
-    return Responses.connect((await Connect.create(topic, user, [user], [])).connect);
+    return Responses.connectSpace((await ConnectSpace.create(topic, user, [user], [])).connectSpace);
   }
 
-  @Router.patch("/connects/:connect/add-message")
-  async sendMessage(session: WebSessionDoc, connect: ObjectId, message: string) {
+  @Router.patch("/connectspaces/:connectspace/add-message")
+  async sendMessage(session: WebSessionDoc, connectSpace_id: ObjectId, message: string) {
     const user = WebSession.getUser(session);
     const created = await Post.createMessage(user, message);
-    return Responses.connect((await Connect.addMessage(connect, created.id)).connect);
+    return Responses.connectSpace((await ConnectSpace.addMessage(connectSpace_id, created.id)).connectSpace);
   }
 
-  @Router.patch("/connects/:connect/delete-message")
-  async deleteMessage(session: WebSessionDoc, connect: ObjectId, message_id: ObjectId) {
+  @Router.patch("/connectspaces/:connectspace/delete-message")
+  async deleteMessage(session: WebSessionDoc, connectSpace_id: ObjectId, message_id: ObjectId) {
     const user = WebSession.getUser(session);
     await Post.isAuthor(user, message_id);
     await Post.delete(message_id);
-    return Responses.connect((await Connect.deleteMessage(connect, message_id)).connect);
+    return Responses.connectSpace((await ConnectSpace.deleteMessage(connectSpace_id, message_id)).connectSpace);
   }
 
-  @Router.patch("/connects/join/:_id")
-  async joinEvent(session: WebSessionDoc, _id: ObjectId) {
+  @Router.patch("/connectspaces/join/:_id")
+  async joinEvent(session: WebSessionDoc, connectSpace_id: ObjectId) {
     const user = WebSession.getUser(session);
     const username = (await User.getUserById(user)).username;
-    await Connect.join(_id, user, username);
-    const messages = await Post.getPostsByIds(await Connect.getMessages(_id));
+    await ConnectSpace.join(connectSpace_id, user, username);
+    const messages = await Post.getPostsByIds(await ConnectSpace.getMessages(connectSpace_id));
     return { msg: `${username} joined!`, messages: Responses.posts(messages) };
   }
 
-  @Router.patch("/connects/leave/:_id")
-  async leaveEvent(session: WebSessionDoc, _id: ObjectId) {
+  @Router.patch("/connectspaces/leave/:_id")
+  async leaveEvent(session: WebSessionDoc, connectSpace_id: ObjectId) {
     const user = WebSession.getUser(session);
-    return Connect.leave(_id, user, (await User.getUserById(user)).username);
+    return ConnectSpace.leave(connectSpace_id, user, (await User.getUserById(user)).username);
   }
 
-  @Router.get("/connects/:_id")
-  async eventParticipants(_id: ObjectId) {
-    const participants_ids = await Connect.getParticipants(_id);
+  @Router.get("/connectspaces/:_id")
+  async eventParticipants(connectSpace_id: ObjectId) {
+    const participants_ids = await ConnectSpace.getParticipants(connectSpace_id);
     return User.idsToUsernames(participants_ids);
   }
 
-  @Router.delete("/connects/end/:_id")
-  async endEvent(_id: ObjectId) {
-    return Connect.end(_id);
+  @Router.delete("/connectspaces/end/:_id")
+  async endEvent(connectSpace_id: ObjectId) {
+    return ConnectSpace.end(connectSpace_id);
   }
 }
 
