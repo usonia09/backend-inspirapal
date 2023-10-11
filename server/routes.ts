@@ -276,22 +276,15 @@ class Routes {
   async joinEvent(session: WebSessionDoc, _id: ObjectId) {
     const user = WebSession.getUser(session);
     const username = (await User.getUserById(user)).username;
-    await Connect.join(_id, user);
-    const messages_id = await Connect.getMessages(_id);
-    const messages: PostDoc[] = [];
-    for (const id of messages_id) {
-      const message = await Post.getPostById(id);
-      if (message) {
-        messages.push(message);
-      }
-    }
+    await Connect.join(_id, user, username);
+    const messages = await Post.getPostsByIds(await Connect.getMessages(_id));
     return { msg: `${username} joined!`, messages: Responses.posts(messages) };
   }
 
   @Router.patch("/connects/leave/:_id")
   async leaveEvent(session: WebSessionDoc, _id: ObjectId) {
     const user = WebSession.getUser(session);
-    return Connect.leave(_id, user);
+    return Connect.leave(_id, user, (await User.getUserById(user)).username);
   }
 
   @Router.get("/connects/:_id")

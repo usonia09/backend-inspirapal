@@ -46,6 +46,17 @@ export default class PostConcept {
     return await this.posts.readOne({ _id });
   }
 
+  async getPostsByIds(ids: ObjectId[]) {
+    const posts: PostDoc[] = [];
+    for (const id of ids) {
+      const post = await this.getPostById(id);
+      if (post) {
+        posts.push(post);
+      }
+    }
+    return posts;
+  }
+
   async getByAuthor(author: ObjectId) {
     return await this.getPosts({ author });
   }

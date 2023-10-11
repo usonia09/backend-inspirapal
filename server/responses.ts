@@ -1,4 +1,4 @@
-import { User } from "./app";
+import { Post, User } from "./app";
 import { CommentDoc } from "./concepts/comment";
 import { ConnectDoc } from "./concepts/connect";
 import { AlreadyFriendsError, FriendNotFoundError, FriendRequestAlreadyExistsError, FriendRequestDoc, FriendRequestNotFoundError } from "./concepts/friend";
@@ -22,7 +22,8 @@ export default class Responses {
     }
     const organizer = await User.getUserById(connect.organizer);
     const participants = await User.idsToUsernames(connect.participants);
-    return { ...connect, organizer: organizer.username, participants: participants };
+    const messages = await this.posts(await Post.getPostsByIds(connect.messages));
+    return { ...connect, organizer: organizer.username, participants: participants, messages: messages };
   }
 
   /**

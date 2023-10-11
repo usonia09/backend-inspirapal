@@ -17,7 +17,7 @@ export default class ConnectConcept {
     return { msg: "connect successfully created!", connect: await this.connects.readOne({ _id }) };
   }
 
-  async join(_id: ObjectId, user: ObjectId) {
+  async join(_id: ObjectId, user: ObjectId, username: string) {
     const connect = await this.connects.readOne({ _id });
     if (!connect) {
       throw new NotFoundError(`connect ${_id} does not exist`);
@@ -26,10 +26,10 @@ export default class ConnectConcept {
     const participants = connect.participants;
     participants.push(user);
     await this.updateConnect(_id, { participants });
-    return { msg: `${user} joined Connect ${_id}` };
+    return { msg: `${username} joined Connect with topic ${connect.topic}` };
   }
 
-  async leave(_id: ObjectId, user: ObjectId) {
+  async leave(_id: ObjectId, user: ObjectId, username: string) {
     const connect = await this.connects.readOne({ _id });
     if (!connect) {
       throw new NotFoundError(`Connect Event ${_id} does not exist`);
@@ -39,7 +39,7 @@ export default class ConnectConcept {
       return elt.toString() !== user.toString();
     });
     await this.updateConnect(_id, { participants });
-    return { msg: `${user} left Connect ${_id}` };
+    return { msg: `${username} left Connect with topic ${connect.topic}` };
   }
 
   async getConnects(query: Filter<ConnectDoc>) {
@@ -49,7 +49,7 @@ export default class ConnectConcept {
   private async notInConnect(connect: ConnectDoc, user: ObjectId) {
     for (const elt of connect.participants) {
       if (elt.toString() === user.toString()) {
-        throw new NotAllowedError(`Already in Connect ${connect._id}`);
+        throw new NotAllowedError(`You've already joined this Connect`);
       }
     }
   }
