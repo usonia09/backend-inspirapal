@@ -163,35 +163,35 @@ const operations: operation[] = [
   },
 
   {
-    name: "Start Event",
+    name: "Start Connect",
     endpoint: "/api/connects",
     method: "POST",
     fields: { topic: "input" },
   },
 
   {
-    name: "Join Event",
+    name: "Join Connect",
     endpoint: "/api/connects/join/:id",
     method: "PATCH",
     fields: { id: "input" },
   },
 
   {
-    name: "Leave Event",
+    name: "Leave Connect",
     endpoint: "/api/connects/leave/:id",
     method: "PATCH",
     fields: { id: "input" },
   },
 
   {
-    name: "End Event",
+    name: "End Connect",
     endpoint: "/api/connects/end/:id",
     method: "DELETE",
     fields: { id: "input" },
   },
 
   {
-    name: "Get Event Participants",
+    name: "Get Connect Participants",
     endpoint: "/api/connects/:id",
     method: "GET",
     fields: { id: "input" },
