@@ -10,16 +10,21 @@ export interface PostOptions {
 export interface PostDoc extends BaseDoc {
   author: ObjectId;
   content: string;
-  label: string;
+  label?: string;
   options?: PostOptions;
 }
 
 export default class PostConcept {
   public readonly posts = new DocCollection<PostDoc>("posts");
 
-  async create(author: ObjectId, content: string, label: string, options?: PostOptions) {
+  async createPost(author: ObjectId, content: string, label: string, options?: PostOptions) {
     const _id = await this.posts.createOne({ author, content, label, options });
     return { msg: "Post successfully created!", id: _id, post: await this.posts.readOne({ _id }) };
+  }
+
+  async createMessage(author: ObjectId, content: string) {
+    const _id = await this.posts.createOne({ author, content });
+    return { msg: "Message successfully created!", id: _id, message: await this.posts.readOne({ _id }) };
   }
 
   async getPosts(query: Filter<PostDoc>) {

@@ -75,6 +75,37 @@ export default class ConnectConcept {
     return connect.participants;
   }
 
+  async addMessage(_id: ObjectId, message: ObjectId) {
+    const connect = await this.connects.readOne({ _id });
+    if (!connect) {
+      throw new NotFoundError(`connect ${_id} does not exist`);
+    }
+    const messages = connect.messages;
+    messages.push(message);
+    await this.updateConnect(_id, { messages });
+    return { connect: await this.connects.readOne({ _id }) };
+  }
+
+  async deleteMessage(_id: ObjectId, message: ObjectId) {
+    const connect = await this.connects.readOne({ _id });
+    if (!connect) {
+      throw new NotFoundError(`connect ${_id} does not exist`);
+    }
+    const messages = connect.messages.filter((elt) => {
+      return elt.toString() !== message.toString();
+    });
+    await this.updateConnect(_id, { messages });
+    return { connect: await this.connects.readOne({ _id }) };
+  }
+
+  async getMessages(_id: ObjectId) {
+    const connect = await this.connects.readOne({ _id });
+    if (!connect) {
+      throw new NotFoundError(`connect ${_id} does not exist`);
+    }
+    return connect.messages;
+  }
+
   async end(_id: ObjectId) {
     await this.connects.deleteOne({ _id });
     return { msg: "Event ended!" };

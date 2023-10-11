@@ -66,7 +66,7 @@ class Routes {
       const id = (await User.getUserByUsername(author))._id;
       posts = await Post.getByAuthor(id);
     } else {
-      posts = await Post.getPosts({});
+      posts = await Post.getPosts({ label: { $exists: false } });
     }
     return Responses.posts(posts);
   }
@@ -75,8 +75,9 @@ class Routes {
   async createPost(session: WebSessionDoc, content: string, label: string, options?: PostOptions) {
     const user = WebSession.getUser(session);
     await Category.categoryExist(label);
-    const created = await Post.create(user, content, label, options);
+    const created = await Post.createPost(user, content, label, options);
     await Category.addItem((await Category.getCategoryByName(label))._id, created.id);
+
     return { msg: created.msg, post: await Responses.post(created.post) };
   }
 
@@ -92,7 +93,9 @@ class Routes {
     const user = WebSession.getUser(session);
     await Post.isAuthor(user, _id);
     const label = await Post.getPostLabel(_id);
-    await Category.deleteItem((await Category.getCategoryByName(label))._id, _id);
+    if (label) {
+      await Category.deleteItem((await Category.getCategoryByName(label))._id, _id);
+    }
     return Post.delete(_id);
   }
 
@@ -255,10 +258,26 @@ class Routes {
     return Connect.create(topic, user, [user], []);
   }
 
+  @Router.patch("/connects/:connect/add-message")
+  async sendMessage(session: WebSessionDoc, connect: ObjectId, message: string) {
+    const user = WebSession.getUser(session);
+    const created = await Post.createMessage(user, message);
+    return Connect.addMessage(connect, created.id);
+  }
+
+  @Router.patch("/connects/:connect/delete-message")
+  async deleteMessage(session: WebSessionDoc, connect: ObjectId, message_id: ObjectId) {
+    const user = WebSession.getUser(session);
+    await Post.isAuthor(user, message_id);
+    await Post.delete(message_id);
+    return Connect.deleteMessage(connect, message_id);
+  }
+
   @Router.patch("/connects/join/:_id")
   async joinEvent(session: WebSessionDoc, _id: ObjectId) {
     const user = WebSession.getUser(session);
-    return Connect.join(_id, user);
+    await Connect.join(_id, user);
+    return Connect.getMessages(_id);
   }
 
   @Router.patch("/connects/leave/:_id")

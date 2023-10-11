@@ -191,10 +191,24 @@ const operations: operation[] = [
   },
 
   {
-    name: "get Event Participants",
+    name: "Get Event Participants",
     endpoint: "/api/connects/:id",
     method: "GET",
     fields: { id: "input" },
+  },
+
+  {
+    name: "Add Message to Connect",
+    endpoint: "/api/connects/:connect/add-message",
+    method: "PATCH",
+    fields: { connect: "input", message: "input" },
+  },
+
+  {
+    name: "Delete Message in Connect",
+    endpoint: "/api/connects/:connect/delete-message",
+    method: "PATCH",
+    fields: { connect: "input", message_id: "input" },
   },
 ];
 
