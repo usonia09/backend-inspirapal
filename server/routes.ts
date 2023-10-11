@@ -2,7 +2,7 @@ import { ObjectId } from "mongodb";
 
 import { Router, getExpressRouter } from "./framework/router";
 
-import { Category, Comment, Friend, Post, ScheduleEvent, Upvote, User, WebSession } from "./app";
+import { Category, Comment, Connect, Friend, Post, ScheduleEvent, Upvote, User, WebSession } from "./app";
 import { CommentDoc } from "./concepts/comment";
 import { PostDoc, PostOptions } from "./concepts/post";
 import { ScheduleEventDoc } from "./concepts/scheduleEvent";
@@ -248,25 +248,34 @@ class Routes {
     return ScheduleEvent.cancel(_id);
   }
 
-  /**
-   *  L^3 (Live Learning Lab)
-   */
+  @Router.post("/connects")
+  async startEvent(session: WebSessionDoc, topic: string) {
+    const user = WebSession.getUser(session);
+    await ScheduleEvent.schedule(topic, user, new Date());
+    return Connect.create(topic, user, [user], []);
+  }
 
-  /**
-  
-  @Router.post("/L^3") // creating L3 adds a data to database thus `Post`
-  async startL3(session: WebSessionDoc, title: string, attendants: string[]) {} // session is need to make sure that L3 is started by the host.
+  @Router.patch("/connects/join/:_id")
+  async joinEvent(session: WebSessionDoc, _id: ObjectId) {
+    const user = WebSession.getUser(session);
+    return Connect.join(_id, user);
+  }
 
-  @Router.get("/L^3/:_id") // getting participant is accessing data in the database without changing it thus `GET`
-  async getParticipants(_id: ObjectId) {} //`_id` is used to filter out the L^3 of interest
+  @Router.patch("/connects/leave/:_id")
+  async leaveEvent(session: WebSessionDoc, _id: ObjectId) {
+    const user = WebSession.getUser(session);
+    return Connect.leave(_id, user);
+  }
 
-  @Router.patch("/L^3/:_id") // updating an L^3 involve altering the state of an existing L^3 thus `PATCH`. `any`= L^3DOC
-  async updateL3(session: WebSessionDoc, update: Partial<any>) {}
+  @Router.get("/connects/:_id")
+  async eventParticipants(_id: ObjectId) {
+    return Connect.getParticipants(_id);
+  }
 
-  @Router.delete("/L^3/:_id") // the specific route is choose allow specificity in term of which L^3 to delete
-  async removeL3(session: WebSessionDoc, _id: ObjectId) {}
-  
-  */
+  @Router.delete("/connects/end/:_id")
+  async endEvent(_id: ObjectId) {
+    return Connect.end(_id);
+  }
 }
 
 export default getExpressRouter(new Routes());

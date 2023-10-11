@@ -149,16 +149,51 @@ const operations: operation[] = [
   },
 
   {
-    name: "Get Events",
+    name: "Get Scheduled Events",
     endpoint: "/api/events",
     method: "GET",
     fields: { host: "input", time: "input" },
   },
 
   {
-    name: "Cancel Events",
+    name: "Cancel Scheduled Event",
     endpoint: "/api/events/:id",
     method: "DELETE",
+    fields: { id: "input" },
+  },
+
+  {
+    name: "Start Event",
+    endpoint: "/api/connects",
+    method: "POST",
+    fields: { topic: "input" },
+  },
+
+  {
+    name: "Join Event",
+    endpoint: "/api/connects/join/:id",
+    method: "PATCH",
+    fields: { id: "input" },
+  },
+
+  {
+    name: "Leave Event",
+    endpoint: "/api/connects/leave/:id",
+    method: "PATCH",
+    fields: { id: "input" },
+  },
+
+  {
+    name: "End Event",
+    endpoint: "/api/connects/end/:id",
+    method: "DELETE",
+    fields: { id: "input" },
+  },
+
+  {
+    name: "get Event Participants",
+    endpoint: "/api/connects/:id",
+    method: "GET",
     fields: { id: "input" },
   },
 ];
