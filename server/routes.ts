@@ -194,25 +194,24 @@ class Routes {
     return await Friend.rejectRequest(fromId, user);
   }
 
-  @Router.post("/categories") // creating a category adds a new field in the database thus the use of `post`
+  @Router.post("/categories")
   async createCategory(name: string) {
     return await Category.create(name);
   }
 
-  @Router.get("/categories/:name") // with GET we access all available categories in the database
+  @Router.get("/categories/:name")
   async getContent(name: string) {
-    // We can then get the content of a specific category given its name
     return await Category.getCategoryByName(name);
   }
 
-  @Router.post("/events") // `Post` is once again used here since we are adding new data (Event) to database
+  @Router.post("/events")
   async scheduleEvent(session: WebSessionDoc, title: string, time: string) {
     const user = WebSession.getUser(session);
     const date = new Date(time);
     return ScheduleEvent.schedule(title, user, date);
   }
 
-  @Router.patch("/events/:_id") //`PATCH` is needed with the `_id` to filter out which data to update in the database
+  @Router.patch("/events/:_id")
   async updateEvent(session: WebSessionDoc, _id: ObjectId, update: Partial<ScheduleEventDoc>) {
     const user = WebSession.getUser(session);
     await ScheduleEvent.canEdit(user, _id);
@@ -255,14 +254,14 @@ class Routes {
   async startEvent(session: WebSessionDoc, topic: string) {
     const user = WebSession.getUser(session);
     await ScheduleEvent.schedule(topic, user, new Date());
-    return Connect.create(topic, user, [user], []);
+    return Responses.connect((await Connect.create(topic, user, [user], [])).connect);
   }
 
   @Router.patch("/connects/:connect/add-message")
   async sendMessage(session: WebSessionDoc, connect: ObjectId, message: string) {
     const user = WebSession.getUser(session);
     const created = await Post.createMessage(user, message);
-    return Connect.addMessage(connect, created.id);
+    return Responses.connect((await Connect.addMessage(connect, created.id)).connect);
   }
 
   @Router.patch("/connects/:connect/delete-message")
@@ -270,14 +269,23 @@ class Routes {
     const user = WebSession.getUser(session);
     await Post.isAuthor(user, message_id);
     await Post.delete(message_id);
-    return Connect.deleteMessage(connect, message_id);
+    return Responses.connect((await Connect.deleteMessage(connect, message_id)).connect);
   }
 
   @Router.patch("/connects/join/:_id")
   async joinEvent(session: WebSessionDoc, _id: ObjectId) {
     const user = WebSession.getUser(session);
+    const username = (await User.getUserById(user)).username;
     await Connect.join(_id, user);
-    return Connect.getMessages(_id);
+    const messages_id = await Connect.getMessages(_id);
+    const messages: PostDoc[] = [];
+    for (const id of messages_id) {
+      const message = await Post.getPostById(id);
+      if (message) {
+        messages.push(message);
+      }
+    }
+    return { msg: `${username} joined!`, messages: Responses.posts(messages) };
   }
 
   @Router.patch("/connects/leave/:_id")
@@ -288,7 +296,8 @@ class Routes {
 
   @Router.get("/connects/:_id")
   async eventParticipants(_id: ObjectId) {
-    return Connect.getParticipants(_id);
+    const participants_ids = await Connect.getParticipants(_id);
+    return User.idsToUsernames(participants_ids);
   }
 
   @Router.delete("/connects/end/:_id")

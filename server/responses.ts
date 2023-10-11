@@ -1,5 +1,6 @@
 import { User } from "./app";
 import { CommentDoc } from "./concepts/comment";
+import { ConnectDoc } from "./concepts/connect";
 import { AlreadyFriendsError, FriendNotFoundError, FriendRequestAlreadyExistsError, FriendRequestDoc, FriendRequestNotFoundError } from "./concepts/friend";
 import { PostAuthorNotMatchError, PostDoc } from "./concepts/post";
 import { ScheduleEventDoc } from "./concepts/scheduleEvent";
@@ -12,7 +13,20 @@ import { Router } from "./framework/router";
  */
 export default class Responses {
   /**
-   * Convert CommentDoc into more readable format for frontend by converting author into username.
+   * Convert ConnectDoc into more readable format for frontend by converting organizer and participants into usernames and
+   * making messages more readable.
+   */
+  static async connect(connect: ConnectDoc | null) {
+    if (!connect) {
+      return connect;
+    }
+    const organizer = await User.getUserById(connect.organizer);
+    const participants = await User.idsToUsernames(connect.participants);
+    return { ...connect, organizer: organizer.username, participants: participants };
+  }
+
+  /**
+   * Convert ScheduleDoc into more readable format for frontend by converting host into username.
    */
   static async event(event: ScheduleEventDoc | null) {
     if (!event) {
