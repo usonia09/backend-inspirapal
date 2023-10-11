@@ -13,8 +13,8 @@ import { Router } from "./framework/router";
  */
 export default class Responses {
   /**
-   * Convert ConnectDoc into more readable format for frontend by converting organizer and participants into usernames and
-   * making messages more readable.
+   * Convert ConnectDoc into more readable format for frontend by converting organizer and
+   * participants into usernames and making messages more readable.
    */
   static async connect(connect: ConnectDoc | null) {
     if (!connect) {
