@@ -4,7 +4,7 @@ import { BadValuesError, NotAllowedError, NotFoundError } from "./errors";
 
 export interface CategoryDoc extends BaseDoc {
   name: string;
-  posts: ObjectId[];
+  items: ObjectId[];
 }
 
 export default class CategoryConcept {
@@ -12,8 +12,8 @@ export default class CategoryConcept {
 
   async create(name: string) {
     await this.canCreateCategory(name);
-    const posts: ObjectId[] = [];
-    const _id = await this.categories.createOne({ name, posts });
+    const items: ObjectId[] = [];
+    const _id = await this.categories.createOne({ name, items });
     return { msg: `Category was created successfully!`, category: await this.categories.readOne({ _id }) };
   }
 
@@ -52,9 +52,9 @@ export default class CategoryConcept {
     if (!category) {
       throw new NotFoundError(`Category ${_id} does not exist.`);
     }
-    const posts = category.posts;
-    posts.push(post);
-    await this.updateCategory(_id, { posts });
+    const items = category.items;
+    items.push(post);
+    await this.updateCategory(_id, { items });
     return { msg: "Item successfully added!" };
   }
 
@@ -63,10 +63,10 @@ export default class CategoryConcept {
     if (!category) {
       throw new NotFoundError(`Category ${_id} does not exist.`);
     }
-    const posts = category.posts.filter((elt) => {
+    const items = category.items.filter((elt) => {
       return elt.toString() !== post.toString();
     });
-    await this.updateCategory(_id, { posts });
+    await this.updateCategory(_id, { items });
     return { msg: "Item successfully deleted!" };
   }
 
@@ -78,14 +78,14 @@ export default class CategoryConcept {
 
   private async canCreateCategory(name: string) {
     if (!name) {
-      throw new BadValuesError("Category name cannot be empty.");
+      throw new BadValuesError("Label cannot be empty.");
     }
     await this.isCategoryNameUnique(name);
   }
 
   private sanitizeUpdate(update: Partial<CategoryDoc>) {
     for (const key in update) {
-      if (key !== "posts") {
+      if (key !== "items") {
         throw new NotAllowedError(`Cannot update '${key}' field!`);
       }
     }

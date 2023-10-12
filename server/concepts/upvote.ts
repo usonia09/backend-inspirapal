@@ -52,7 +52,19 @@ export default class UpvoteConcept {
     }
     return upvotes.length;
   }
+
+  async reorder(posts: ObjectId[]) {
+    const upvotes: [ObjectId, number][] = [];
+    for (const post of posts) {
+      const count = await this.countUpvotes(post);
+      upvotes.push([post, count]);
+    }
+    upvotes.sort((a, b) => (a[1] > b[1] ? -1 : 1));
+    const orderedPost = upvotes.map((post) => post[0]);
+    return orderedPost;
+  }
 }
+
 export class UpvoteNoFound extends NotFoundError {
   constructor(public readonly _id: ObjectId) {
     super("Upvote {0} does not exist", _id);

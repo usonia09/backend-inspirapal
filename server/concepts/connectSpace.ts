@@ -17,7 +17,7 @@ export default class ConnectSpaceConcept {
     return { msg: " connectSpace successfully created!", connectSpace: await this.connectSpaces.readOne({ _id }) };
   }
 
-  async join(_id: ObjectId, user: ObjectId, username: string) {
+  async join(_id: ObjectId, user: ObjectId) {
     const connectSpace = await this.connectSpaces.readOne({ _id });
     if (!connectSpace) {
       throw new NotFoundError(` connectSpace ${_id} does not exist`);
@@ -26,10 +26,10 @@ export default class ConnectSpaceConcept {
     const participants = connectSpace.participants;
     participants.push(user);
     await this.updateConnectSpace(_id, { participants });
-    return { msg: `${username} joined ConnectSpace with topic ${connectSpace.topic}` };
+    return { msg: `${user} joined ConnectSpace with topic ${connectSpace.topic}` };
   }
 
-  async leave(_id: ObjectId, user: ObjectId, username: string) {
+  async leave(_id: ObjectId, user: ObjectId) {
     const connectSpace = await this.connectSpaces.readOne({ _id });
     if (!connectSpace) {
       throw new NotFoundError(`ConnectSpace Event ${_id} does not exist`);
@@ -39,7 +39,7 @@ export default class ConnectSpaceConcept {
       return elt.toString() !== user.toString();
     });
     await this.updateConnectSpace(_id, { participants });
-    return { msg: `${username} left ConnectSpace with topic ${connectSpace.topic}` };
+    return { msg: `${user} left ConnectSpace with topic ${connectSpace.topic}` };
   }
 
   async getConnectSpaces(query: Filter<ConnectSpaceDoc>) {
@@ -60,38 +60,43 @@ export default class ConnectSpaceConcept {
         return;
       }
     }
-    throw new NotAllowedError(`User not in Connect`);
+    throw new NotAllowedError(`User not in ConnectSpace`);
   }
 
   async getConnectsByOrganizer(organizer: ObjectId) {
     return this.connectSpaces.readMany({ organizer });
   }
 
-  async getParticipants(_id: ObjectId) {
-    const connect = await this.connectSpaces.readOne({ _id });
-    if (!connect) {
-      throw new NotFoundError(`connect ${_id} does not exist`);
-    }
-    return connect.participants;
+  async getConnectSpaceById(_id: ObjectId) {
+    return this.connectSpaces.readOne({ _id });
   }
 
-  async addMessage(_id: ObjectId, message: ObjectId) {
-    const connect = await this.connectSpaces.readOne({ _id });
-    if (!connect) {
+  async getParticipants(_id: ObjectId) {
+    const connectSpace = await this.connectSpaces.readOne({ _id });
+    if (!connectSpace) {
       throw new NotFoundError(`connect ${_id} does not exist`);
     }
-    const messages = connect.messages;
+    return connectSpace.participants;
+  }
+
+  async addMessage(_id: ObjectId, message: ObjectId, user: ObjectId) {
+    const connectSpace = await this.connectSpaces.readOne({ _id });
+    if (!connectSpace) {
+      throw new NotFoundError(`connect ${_id} does not exist`);
+    }
+    await this.InConnectSpace(connectSpace, user);
+    const messages = connectSpace.messages;
     messages.push(message);
     await this.updateConnectSpace(_id, { messages });
     return { connectSpace: await this.connectSpaces.readOne({ _id }) };
   }
 
   async deleteMessage(_id: ObjectId, message: ObjectId) {
-    const connect = await this.connectSpaces.readOne({ _id });
-    if (!connect) {
+    const connectSpace = await this.connectSpaces.readOne({ _id });
+    if (!connectSpace) {
       throw new NotFoundError(`connect ${_id} does not exist`);
     }
-    const messages = connect.messages.filter((elt) => {
+    const messages = connectSpace.messages.filter((elt) => {
       return elt.toString() !== message.toString();
     });
     await this.updateConnectSpace(_id, { messages });
@@ -99,11 +104,22 @@ export default class ConnectSpaceConcept {
   }
 
   async getMessages(_id: ObjectId) {
-    const connect = await this.connectSpaces.readOne({ _id });
-    if (!connect) {
+    const connectSpace = await this.connectSpaces.readOne({ _id });
+    if (!connectSpace) {
       throw new NotFoundError(`connect ${_id} does not exist`);
     }
-    return connect.messages;
+    return connectSpace.messages;
+  }
+
+  async isOrganizer(_id: ObjectId, user: ObjectId) {
+    const connectSpace = await this.connectSpaces.readOne({ _id });
+    if (!connectSpace) {
+      throw new NotFoundError(`connect ${_id} does not exist`);
+    }
+    if (connectSpace.organizer.toString() !== user.toString()) {
+      throw new NotAllowedError(`user ${user} is not organizer of event ${_id}`);
+    }
+    return { msg: "Event ended!" };
   }
 
   async end(_id: ObjectId) {

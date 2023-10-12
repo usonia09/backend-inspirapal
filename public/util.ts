@@ -131,7 +131,7 @@ const operations: operation[] = [
     name: "Get Category Content",
     endpoint: "/api/categories/:name",
     method: "GET",
-    fields: { name: "input" },
+    fields: { category_name: "input" },
   },
 
   {
@@ -152,7 +152,7 @@ const operations: operation[] = [
     name: "Get Scheduled Events",
     endpoint: "/api/events",
     method: "GET",
-    fields: { host: "input", time: "input" },
+    fields: { scheduler: "input", time: "input" },
   },
 
   {

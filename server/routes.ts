@@ -43,6 +43,8 @@ class Routes {
   async deleteUser(session: WebSessionDoc) {
     const user = WebSession.getUser(session);
     WebSession.end(session);
+    const post_ids = (await Post.getByAuthor(user)).map((post) => post._id);
+    post_ids.map(async (id) => await Post.delete(id));
     return await User.delete(user);
   }
 
@@ -64,9 +66,9 @@ class Routes {
     let posts;
     if (author) {
       const id = (await User.getUserByUsername(author))._id;
-      posts = await Post.getByAuthor(id);
+      posts = await Post.getPosts({ author: id, label: { $exists: true } });
     } else {
-      posts = await Post.getPosts({ label: { $exists: false } });
+      posts = await Post.getPosts({ label: { $exists: true } });
     }
     return Responses.posts(posts);
   }
@@ -84,7 +86,14 @@ class Routes {
   @Router.patch("/posts/:_id")
   async updatePost(session: WebSessionDoc, _id: ObjectId, update: Partial<PostDoc>) {
     const user = WebSession.getUser(session);
+    const post_label = await Post.getPostLabel(_id);
     await Post.isAuthor(user, _id);
+    if (post_label && update.label && post_label !== update.label) {
+      const new_category = (await Category.getCategoryByName(update.label))._id;
+      await Category.addItem(new_category, _id);
+      await Category.deleteItem((await Category.getCategoryByName(post_label))._id, _id);
+    }
+
     return await Post.update(_id, update);
   }
 
@@ -96,6 +105,8 @@ class Routes {
     if (label) {
       await Category.deleteItem((await Category.getCategoryByName(label))._id, _id);
     }
+    const comment_ids = (await Comment.getCommentByPost(_id)).map((comment) => comment._id);
+    comment_ids.map(async (id) => await Comment.delete(id));
     return Post.delete(_id);
   }
 
@@ -103,21 +114,26 @@ class Routes {
   async createUpvote(session: WebSessionDoc, post: ObjectId) {
     const user = WebSession.getUser(session);
     await Upvote.hasNotUpvoted(user, post);
-    const upvote = await Upvote.upvote(user, post);
-    return { msg: upvote.msg, upvote: await Responses.upvote(upvote.upvote) };
+    await Upvote.upvote(user, post);
+    const post_ids = (await Post.getPosts({ label: { $exists: true } })).map((post) => post._id);
+    const orderedPost = await Upvote.reorder(post_ids);
+    return Responses.feeds(await Post.getPostsByIds(orderedPost));
   }
 
   @Router.delete("/upvotes/:_id")
   async deleteUpvote(session: WebSessionDoc, _id: ObjectId) {
     const user = WebSession.getUser(session);
     await Upvote.isUpvoter(user, _id);
-    return Upvote.removeUpvote(_id);
+    await Upvote.removeUpvote(_id);
+    const post_ids = (await Post.getPosts({ label: { $exists: true } })).map((post) => post._id);
+    const orderedPost = await Upvote.reorder(post_ids);
+    return Responses.feeds(await Post.getPostsByIds(orderedPost));
   }
 
   @Router.get("/posts/:post/upvotes")
   async getUpvotes(post: ObjectId) {
     const upvotes = await Upvote.getUpvoteByPost(post);
-    return { msg: `Post ${post} has ${await Upvote.countUpvotes(post)} upvotes:`, upvotes: await Responses.upvotes(upvotes) };
+    return { msg: `Post ${post} has ${await Upvote.countUpvotes(post)} upvotes:`, upvoters: await Responses.upvoters(upvotes) };
   }
 
   @Router.get("/friends")
@@ -137,6 +153,8 @@ class Routes {
   async deleteComment(session: WebSessionDoc, _id: ObjectId) {
     const user = WebSession.getUser(session);
     await Comment.isAuthor(user, _id);
+    const comment_ids = (await Comment.getCommentByPost(_id)).map((comment) => comment._id);
+    comment_ids.map(async (id) => await Comment.delete(id));
     return Comment.delete(_id);
   }
 
@@ -200,15 +218,16 @@ class Routes {
   }
 
   @Router.get("/categories/:name")
-  async getContent(name: string) {
-    return await Category.getCategoryByName(name);
+  async getContent(category_name: string) {
+    const items = (await Category.getCategoryByName(category_name)).items;
+    const content = await Post.getPostsByIds(items);
+    return { category: category_name, content: await Responses.posts(content) };
   }
 
   @Router.post("/events")
   async scheduleEvent(session: WebSessionDoc, title: string, time: string) {
     const user = WebSession.getUser(session);
-    const date = new Date(time);
-    return ScheduleEvent.schedule(title, user, date);
+    return ScheduleEvent.scheduleEvent(title, user, new Date(time));
   }
 
   @Router.patch("/events/:_id")
@@ -222,20 +241,20 @@ class Routes {
   }
 
   @Router.get("/events")
-  async getEvents(host?: string, time?: string) {
+  async getEvents(scheduler?: string, time?: string) {
     let events: ScheduleEventDoc[];
-    if (time && host) {
+    if (time && scheduler) {
       const date = new Date(time);
-      const id = (await User.getUserByUsername(host))._id;
-      events = (await ScheduleEvent.getEventByHost(id)).filter((event) => {
+      const id = (await User.getUserByUsername(scheduler))._id;
+      events = (await ScheduleEvent.getEventByScheduler(id)).filter((event) => {
         return event.time.toString() === date.toString();
       });
     } else if (time) {
       const date = new Date(time);
       events = await ScheduleEvent.getEventAtTime(date);
-    } else if (host) {
-      const id = (await User.getUserByUsername(host))._id;
-      events = await ScheduleEvent.getEventByHost(id);
+    } else if (scheduler) {
+      const id = (await User.getUserByUsername(scheduler))._id;
+      events = await ScheduleEvent.getEventByScheduler(id);
     } else {
       events = await ScheduleEvent.getEvents({});
     }
@@ -253,15 +272,18 @@ class Routes {
   @Router.post("/connectspaces")
   async startEvent(session: WebSessionDoc, topic: string) {
     const user = WebSession.getUser(session);
-    await ScheduleEvent.schedule(topic, user, new Date());
-    return Responses.connectSpace((await ConnectSpace.create(topic, user, [user], [])).connectSpace);
+    const event = (await ConnectSpace.create(topic, user, [user], [])).connectSpace;
+    if (event) {
+      await ScheduleEvent.addEventOnSchedule(event.topic, user, new Date(), event._id);
+    }
+    return Responses.connectSpace(event);
   }
 
   @Router.patch("/connectspaces/:connectspace/add-message")
   async sendMessage(session: WebSessionDoc, connectSpace_id: ObjectId, message: string) {
     const user = WebSession.getUser(session);
     const created = await Post.createMessage(user, message);
-    return Responses.connectSpace((await ConnectSpace.addMessage(connectSpace_id, created.id)).connectSpace);
+    return Responses.connectSpace((await ConnectSpace.addMessage(connectSpace_id, created.id, user)).connectSpace);
   }
 
   @Router.patch("/connectspaces/:connectspace/delete-message")
@@ -275,16 +297,14 @@ class Routes {
   @Router.patch("/connectspaces/join/:_id")
   async joinEvent(session: WebSessionDoc, connectSpace_id: ObjectId) {
     const user = WebSession.getUser(session);
-    const username = (await User.getUserById(user)).username;
-    await ConnectSpace.join(connectSpace_id, user, username);
-    const messages = await Post.getPostsByIds(await ConnectSpace.getMessages(connectSpace_id));
-    return { msg: `${username} joined!`, messages: Responses.posts(messages) };
+    await ConnectSpace.join(connectSpace_id, user);
+    return { msg: `${user} joined!`, connect: await Responses.connectSpace(await ConnectSpace.getConnectSpaceById(connectSpace_id)) };
   }
 
   @Router.patch("/connectspaces/leave/:_id")
   async leaveEvent(session: WebSessionDoc, connectSpace_id: ObjectId) {
     const user = WebSession.getUser(session);
-    return ConnectSpace.leave(connectSpace_id, user, (await User.getUserById(user)).username);
+    return ConnectSpace.leave(connectSpace_id, user);
   }
 
   @Router.get("/connectspaces/:_id")
@@ -294,7 +314,11 @@ class Routes {
   }
 
   @Router.delete("/connectspaces/end/:_id")
-  async endEvent(connectSpace_id: ObjectId) {
+  async endEvent(session: WebSessionDoc, connectSpace_id: ObjectId) {
+    const user = WebSession.getUser(session);
+    await ConnectSpace.isOrganizer(connectSpace_id, user);
+    const events = await ScheduleEvent.getEventByEventId(connectSpace_id);
+    await ScheduleEvent.deleteEvents(events);
     return ConnectSpace.end(connectSpace_id);
   }
 }

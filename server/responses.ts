@@ -1,4 +1,4 @@
-import { Post, User } from "./app";
+import { Post, Upvote, User } from "./app";
 import { CommentDoc } from "./concepts/comment";
 import { ConnectSpaceDoc } from "./concepts/connectSpace";
 import { AlreadyFriendsError, FriendNotFoundError, FriendRequestAlreadyExistsError, FriendRequestDoc, FriendRequestNotFoundError } from "./concepts/friend";
@@ -27,22 +27,22 @@ export default class Responses {
   }
 
   /**
-   * Convert ScheduleDoc into more readable format for frontend by converting host into username.
+   * Convert ScheduleDoc into more readable format for frontend by converting scheduler into username.
    */
   static async event(event: ScheduleEventDoc | null) {
     if (!event) {
       return event;
     }
-    const host = await User.getUserById(event.host);
-    return { ...event, host: host.username };
+    const scheduler = await User.getUserById(event.scheduler);
+    return { ...event, scheduler: scheduler.username };
   }
 
   /**
    * Same as {@link event} but for an array of ScheduleEventDoc for improved performance.
    */
   static async events(events: ScheduleEventDoc[]) {
-    const hosts = await User.idsToUsernames(events.map((event) => event.host));
-    return events.map((event, i) => ({ ...event, host: hosts[i] }));
+    const schedulers = await User.idsToUsernames(events.map((event) => event.scheduler));
+    return events.map((event, i) => ({ ...event, scheduler: schedulers[i] }));
   }
 
   /**
@@ -65,22 +65,19 @@ export default class Responses {
   }
 
   /**
-   * Convert UpvoteDoc into more readable format for frontend by converting upvoter into username.
+   * Convert an array of PostDoc to readable feeds.
    */
-  static async upvote(upvote: UpvoteDoc | null) {
-    if (!upvote) {
-      return upvote;
-    }
-    const upvoter = await User.getUserById(upvote.upvoter);
-    return { ...upvote, upvoter: upvoter.username };
+  static async feeds(posts: PostDoc[]) {
+    const readablePosts = await this.posts(posts);
+    const upvotes = posts.map(async (post) => await Upvote.countUpvotes(post._id));
+    return readablePosts.map((post, i) => ({ ...post, upvoteCount: upvotes[i] }));
   }
 
   /**
-   * Same as {@link upvote} but for an array of PostDoc for improved performance.
+   * Convert an array of UpvoteDoc to upvoter usernames.
    */
-  static async upvotes(upvotes: UpvoteDoc[]) {
-    const upvoters = await User.idsToUsernames(upvotes.map((upvote) => upvote.upvoter));
-    return upvotes.map((upvote, i) => ({ ...upvote, upvoter: upvoters[i] }));
+  static async upvoters(upvotes: UpvoteDoc[]) {
+    return await User.idsToUsernames(upvotes.map((upvote) => upvote.upvoter));
   }
 
   /**

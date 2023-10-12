@@ -3,17 +3,23 @@ import DocCollection, { BaseDoc } from "../framework/doc";
 import { NotAllowedError, NotFoundError } from "./errors";
 
 export interface ScheduleEventDoc extends BaseDoc {
-  title: string;
-  host: ObjectId;
+  title: String;
+  scheduler: ObjectId;
   time: Date;
+  event?: ObjectId;
 }
 
 export default class ScheduleEventConcept {
   public readonly scheduledEvents = new DocCollection<ScheduleEventDoc>("scheduleEvent");
 
-  async schedule(title: string, host: ObjectId, time: Date) {
-    const _id = await this.scheduledEvents.createOne({ title, host, time });
+  async scheduleEvent(title: String, scheduler: ObjectId, time: Date) {
+    const _id = await this.scheduledEvents.createOne({ title, scheduler, time });
     return { msg: "Event successfully scheduled!", event: await this.scheduledEvents.readOne({ _id }) };
+  }
+
+  async addEventOnSchedule(title: String, scheduler: ObjectId, time: Date, event: ObjectId) {
+    const _id = await this.scheduledEvents.createOne({ title, scheduler, time, event });
+    return { msg: "Event successfully added to schedule!", event: await this.scheduledEvents.readOne({ _id }) };
   }
 
   async cancel(_id: ObjectId) {
@@ -29,8 +35,12 @@ export default class ScheduleEventConcept {
     return this.scheduledEvents.readMany({ time });
   }
 
-  async getEventByHost(host: ObjectId) {
-    return this.scheduledEvents.readMany({ host });
+  async getEventByEventId(event: ObjectId) {
+    return this.scheduledEvents.readMany({ event });
+  }
+
+  async getEventByScheduler(scheduler: ObjectId) {
+    return this.scheduledEvents.readMany({ scheduler });
   }
 
   async getEvents(query: Filter<ScheduleEventDoc>) {
@@ -38,6 +48,11 @@ export default class ScheduleEventConcept {
       sort: { time: -1 },
     });
     return events;
+  }
+
+  async deleteEvents(events: ScheduleEventDoc[]) {
+    events.map(async (event) => await this.cancel(event._id));
+    return { msg: "Events removed from schedule!" };
   }
 
   async getEventTime(_id: ObjectId) {
@@ -53,17 +68,17 @@ export default class ScheduleEventConcept {
     if (!event) {
       throw new NotFoundError(`Event ${_id} does not exist`);
     }
-    if (user.toString() !== event.host.toString()) {
-      throw new EventHostNotMatchError(user, _id);
+    if (user.toString() !== event.scheduler.toString()) {
+      throw new EventSchedulerNotMatchError(user, _id);
     }
   }
 }
 
-export class EventHostNotMatchError extends NotAllowedError {
+export class EventSchedulerNotMatchError extends NotAllowedError {
   constructor(
     public readonly user: ObjectId,
     public readonly _id: ObjectId,
   ) {
-    super("{0} is not the host of event {1}!", user, _id);
+    super("{0} is not the scheduler of event {1}!", user, _id);
   }
 }
