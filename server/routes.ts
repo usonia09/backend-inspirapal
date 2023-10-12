@@ -275,47 +275,47 @@ class Routes {
     return Responses.connectSpace(event);
   }
 
-  @Router.patch("/connectspaces/:connectspace/add-message")
-  async sendMessage(session: WebSessionDoc, connectSpace_id: ObjectId, message: string) {
+  @Router.patch("/connectspaces/:connectspaceId/messages")
+  async sendMessage(session: WebSessionDoc, connectspaceId: ObjectId, message: string) {
     const user = WebSession.getUser(session);
     const created = await Post.createMessage(user, message);
-    return Responses.connectSpace((await ConnectSpace.addMessage(connectSpace_id, created.id, user)).connectSpace);
+    return Responses.connectSpace((await ConnectSpace.addMessage(connectspaceId, created.id, user)).connectSpace);
   }
 
-  @Router.patch("/connectspaces/:connectspace/delete-message")
-  async deleteMessage(session: WebSessionDoc, connectSpace_id: ObjectId, message_id: ObjectId) {
+  @Router.patch("/connectspaces/:connectspaceId/messages/:messageId")
+  async deleteMessage(session: WebSessionDoc, connectspaceId: ObjectId, messageId: ObjectId) {
     const user = WebSession.getUser(session);
-    await Post.isAuthor(user, message_id);
-    await Post.delete(message_id);
-    return Responses.connectSpace((await ConnectSpace.deleteMessage(connectSpace_id, message_id)).connectSpace);
+    await Post.isAuthor(user, messageId);
+    await Post.delete(messageId);
+    return Responses.connectSpace((await ConnectSpace.deleteMessage(connectspaceId, messageId)).connectSpace);
   }
 
-  @Router.patch("/connectspaces/join/:_id")
-  async joinEvent(session: WebSessionDoc, connectSpace_id: ObjectId) {
+  @Router.patch("/connectspaces/:connectspaceId/join")
+  async joinEvent(session: WebSessionDoc, connectspaceId: ObjectId) {
     const user = WebSession.getUser(session);
-    await ConnectSpace.join(connectSpace_id, user);
-    return { msg: `${user} joined!`, connect: await Responses.connectSpace(await ConnectSpace.getConnectSpaceById(connectSpace_id)) };
+    await ConnectSpace.join(connectspaceId, user);
+    return { msg: `${user} joined!`, connect: await Responses.connectSpace(await ConnectSpace.getConnectSpaceById(connectspaceId)) };
   }
 
-  @Router.patch("/connectspaces/leave/:_id")
-  async leaveEvent(session: WebSessionDoc, connectSpace_id: ObjectId) {
+  @Router.patch("/connectspaces/:connectspaceId/leave")
+  async leaveEvent(session: WebSessionDoc, connectspaceId: ObjectId) {
     const user = WebSession.getUser(session);
-    return ConnectSpace.leave(connectSpace_id, user);
+    return ConnectSpace.leave(connectspaceId, user);
   }
 
-  @Router.get("/connectspaces/:_id")
-  async eventParticipants(connectSpace_id: ObjectId) {
-    const participants_ids = await ConnectSpace.getParticipants(connectSpace_id);
+  @Router.get("/connectspaces/:connectspaceId/participants")
+  async eventParticipants(connectspaceId: ObjectId) {
+    const participants_ids = await ConnectSpace.getParticipants(connectspaceId);
     return User.idsToUsernames(participants_ids);
   }
 
-  @Router.delete("/connectspaces/end/:_id")
-  async endEvent(session: WebSessionDoc, connectSpace_id: ObjectId) {
+  @Router.delete("/connectspaces/:connectspaceId/end")
+  async endEvent(session: WebSessionDoc, connectspaceId: ObjectId) {
     const user = WebSession.getUser(session);
-    await ConnectSpace.isOrganizer(connectSpace_id, user);
-    const events = await ScheduleEvent.getEventByEventId(connectSpace_id);
+    await ConnectSpace.isOrganizer(connectspaceId, user);
+    const events = await ScheduleEvent.getEventByEventId(connectspaceId);
     await ScheduleEvent.deleteEvents(events);
-    return ConnectSpace.end(connectSpace_id);
+    return ConnectSpace.end(connectspaceId);
   }
 }
 
