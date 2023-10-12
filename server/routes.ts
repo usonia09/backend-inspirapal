@@ -72,8 +72,7 @@ class Routes {
     }
     const orderedPost = await Upvote.reorder(posts.map((post) => post._id));
     posts = await Post.getPostsByIds(orderedPost);
-    // return Responses.posts(posts);
-    return orderedPost;
+    return Responses.posts(posts);
   }
 
   @Router.post("/posts")
