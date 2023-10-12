@@ -1,4 +1,4 @@
-import { Post, Upvote, User } from "./app";
+import { Post, User } from "./app";
 import { CommentDoc } from "./concepts/comment";
 import { ConnectSpaceDoc } from "./concepts/connectSpace";
 import { AlreadyFriendsError, FriendNotFoundError, FriendRequestAlreadyExistsError, FriendRequestDoc, FriendRequestNotFoundError } from "./concepts/friend";
@@ -65,19 +65,12 @@ export default class Responses {
   }
 
   /**
-   * Convert an array of PostDoc to readable feeds.
-   */
-  static async feeds(posts: PostDoc[]) {
-    const readablePosts = await this.posts(posts);
-    const upvotes = posts.map(async (post) => await Upvote.countUpvotes(post._id));
-    return readablePosts.map((post, i) => ({ ...post, upvoteCount: upvotes[i] }));
-  }
-
-  /**
    * Convert an array of UpvoteDoc to upvoter usernames.
    */
   static async upvoters(upvotes: UpvoteDoc[]) {
-    return await User.idsToUsernames(upvotes.map((upvote) => upvote.upvoter));
+    const upvoters = await User.idsToUsernames(upvotes.map((upvote) => upvote.upvoter));
+    const upvote_ids = upvotes.map((upvote) => upvote._id);
+    return upvoters.map((upvoter, i) => ({ upvoter, upvote_id: upvote_ids[i] }));
   }
 
   /**

@@ -70,7 +70,10 @@ class Routes {
     } else {
       posts = await Post.getPosts({ label: { $exists: true } });
     }
-    return Responses.posts(posts);
+    const orderedPost = await Upvote.reorder(posts.map((post) => post._id));
+    posts = await Post.getPostsByIds(orderedPost);
+    // return Responses.posts(posts);
+    return orderedPost;
   }
 
   @Router.post("/posts")
@@ -114,26 +117,20 @@ class Routes {
   async createUpvote(session: WebSessionDoc, post: ObjectId) {
     const user = WebSession.getUser(session);
     await Upvote.hasNotUpvoted(user, post);
-    await Upvote.upvote(user, post);
-    const post_ids = (await Post.getPosts({ label: { $exists: true } })).map((post) => post._id);
-    const orderedPost = await Upvote.reorder(post_ids);
-    return Responses.feeds(await Post.getPostsByIds(orderedPost));
+    return Upvote.upvote(user, post);
   }
 
   @Router.delete("/upvotes/:_id")
   async deleteUpvote(session: WebSessionDoc, _id: ObjectId) {
     const user = WebSession.getUser(session);
     await Upvote.isUpvoter(user, _id);
-    await Upvote.removeUpvote(_id);
-    const post_ids = (await Post.getPosts({ label: { $exists: true } })).map((post) => post._id);
-    const orderedPost = await Upvote.reorder(post_ids);
-    return Responses.feeds(await Post.getPostsByIds(orderedPost));
+    return await Upvote.removeUpvote(_id);
   }
 
   @Router.get("/posts/:post/upvotes")
   async getUpvotes(post: ObjectId) {
     const upvotes = await Upvote.getUpvoteByPost(post);
-    return { msg: `Post ${post} has ${await Upvote.countUpvotes(post)} upvotes:`, upvoters: await Responses.upvoters(upvotes) };
+    return { msg: `Post ${post} has ${await Upvote.countUpvotes(post)} upvotes:`, upvotes: await Responses.upvoters(upvotes) };
   }
 
   @Router.get("/friends")
